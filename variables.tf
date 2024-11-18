@@ -259,11 +259,11 @@ variable "default_node_pool" {
     kubelet_disk_type = string
     max_pods          = number
     node_network_profile = object({
-      allowed_host_ports = list(object({
+      allowed_host_ports = object({
         port_start = number
         port_end   = number
         protocol   = string
-      }))
+      })
       application_security_group_ids = list(string)
       node_public_ip_tags            = map(string)
     })
@@ -283,13 +283,13 @@ variable "default_node_pool" {
     tags                         = map(string)
     ultra_ssd_enabled            = bool
     upgrade_settings = object({
-      max_surge       = string
-      max_unavailable = string
+      drain_timeout_in_minutes = number
+      node_soak_duration_in_minutes = number
+      max_surge       = number
     })
     vnet_subnet_id       = string
     workload_runtime     = string
     zones                = list(string)
-    auto_scaling_enabled = bool
     max_count            = number
     min_count            = number
     node_count           = number
@@ -357,14 +357,14 @@ variable "linux_profile" {
 variable "maintenance_window" {
   description = "A maintenance_window block as defined below."
   type = object({
-    allowed = list(object({
+    allowed = object({
       day   = string
       hours = list(number)
-    }))
-    not_allowed = list(object({
+    })
+    not_allowed = object({
       end   = string
       start = string
-    }))
+    })
   })
   default = null
 }
@@ -381,10 +381,10 @@ variable "maintenance_window_auto_upgrade" {
     start_time   = string
     utc_offset   = string
     start_date   = string
-    not_allowed = list(object({
+    not_allowed = object({
       end   = string
       start = string
-    }))
+    })
   })
   default = null
 }
@@ -401,10 +401,10 @@ variable "maintenance_window_node_os" {
     start_time   = string
     utc_offset   = string
     start_date   = string
-    not_allowed = list(object({
+    not_allowed = object({
       end   = string
       start = string
-    }))
+    })
   })
   default = null
 }
@@ -547,7 +547,6 @@ variable "http_proxy_config" {
     http_proxy  = string
     https_proxy = string
     no_proxy    = string
-    trusted_ca  = string
   })
   default = null
   }

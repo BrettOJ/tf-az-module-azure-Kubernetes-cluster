@@ -581,7 +581,7 @@ variable "auto_scaler_profile_max_graceful_termination_sec" {
 
 variable "auto_scaler_profile_max_node_provisioning_time" {
   description = "The maximum node provisioning time."
-  type        = number
+  type        = string
 }
 
 variable "auto_scaler_profile_max_unready_nodes" {
@@ -596,7 +596,7 @@ variable "auto_scaler_profile_max_unready_percentage" {
 
 variable "auto_scaler_profile_new_pod_scale_up_delay" {
   description = "The new pod scale up delay."
-  type        = number
+  type        = string
 }
 
 variable "auto_scaler_profile_scale_down_delay_after_add" {
@@ -606,27 +606,27 @@ variable "auto_scaler_profile_scale_down_delay_after_add" {
 
 variable "auto_scaler_profile_scale_down_delay_after_delete" {
   description = "The scale down delay after delete."
-  type        = number
+  type        = string
 }
 
 variable "auto_scaler_profile_scale_down_delay_after_failure" {
   description = "The scale down delay after failure."
-  type        = number
+  type        = string
 }
 
 variable "auto_scaler_profile_scan_interval" {
   description = "The scan interval."
-  type        = number
+  type        = string
 }
 
 variable "auto_scaler_profile_scale_down_unneeded" {
   description = "Should the auto scaler scale down unneeded?"
-  type        = bool
+  type        = string
 }
 
 variable "auto_scaler_profile_scale_down_unready" {
   description = "Should the auto scaler scale down unready?"
-  type        = bool
+  type        = string
 }
 
 variable "auto_scaler_profile_scale_down_utilization_threshold" {
@@ -732,7 +732,7 @@ variable "key_vault_secrets_provider_secret_rotation_enabled" {
 
 variable "key_vault_secrets_provider_secret_rotation_interval" {
   description = "The secret rotation interval."
-  type        = number
+  type        = string
 }
 
 variable "kubelet_identity_client_id" {
@@ -1025,25 +1025,6 @@ variable "oms_agent_msi_auth_for_monitoring_enabled" {
   type        = bool
 }
 
-variable "open_service_mesh_enabled" {
-  description = "Is Open Service Mesh enabled? For more details, please visit Open Service Mesh for AKS."
-  type        = bool
-}
-
-variable "private_cluster_enabled" {
-  description = "Should this Kubernetes Cluster have its API server only exposed on internal IP addresses? This provides a Private IP Address for the Kubernetes API on the Virtual Network where the Kubernetes Cluster is located. Defaults to false. Changing this forces a new resource to be created."
-  type        = bool
-}
-
-variable "private_dns_zone_id" {
-  description = "Either the ID of Private DNS Zone which should be delegated to this Cluster, System to have AKS manage this or None. In case of None you will need to bring your own DNS server and set up resolving, otherwise the cluster will have issues after provisioning. Changing this forces a new resource to be created."
-  type        = string
-}
-
-variable "private_cluster_public_fqdn_enabled" {
-  description = "Specifies whether a Public FQDN for this Private Cluster should be added. Defaults to false."
-  type        = bool
-}
 
 variable "service_mesh_profile_mode" {
   description = "The mode."

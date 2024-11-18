@@ -37,9 +37,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     node_public_ip_enabled        = var.default_node_pool.node_public_ip_enabled
     gpu_instance                  = var.default_node_pool.gpu_instance
     host_group_id                 = var.default_node_pool.host_group_id
-    dynamic "kubelet_config" {
-      for_each = var.default_node_pool.kubelet_config != null ? var.default_node_pool.kubelet_config : {}
-      content {
+    kubelet_config {
         allowed_unsafe_sysctls    = var.default_node_pool.kubelet_config.allowed_unsafe_sysctls
         container_log_max_line    = var.default_node_pool.kubelet_config.container_log_max_line
         container_log_max_size_mb = var.default_node_pool.kubelet_config.container_log_max_size_mb
@@ -50,11 +48,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
         image_gc_low_threshold    = var.default_node_pool.kubelet_config.image_gc_low_threshold
         pod_max_pid               = var.default_node_pool.kubelet_config.pod_max_pid
         topology_manager_policy   = var.default_node_pool.kubelet_config.topology_manager_policy
-      }
     }
-    dynamic "linux_os_config" {
-      for_each = var.default_node_pool.linux_os_config != null ? var.default_node_pool.linux_os_config : {}
-      content {
+    linux_os_config {
         swap_file_size_mb = var.default_node_pool.linux_os_config.swap_file_size_mb
         sysctl_config {
           fs_aio_max_nr                      = var.default_node_pool.linux_os_config.sysctl_config.fs_aio_max_nr
@@ -90,7 +85,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
         transparent_huge_page_defrag  = var.default_node_pool.linux_os_config.transparent_huge_page_defrag
         transparent_huge_page_enabled = var.default_node_pool.linux_os_config.transparent_huge_page_enabled
-      }
     }
     fips_enabled      = var.default_node_pool.fips_enabled
     kubelet_disk_type = var.default_node_pool.kubelet_disk_type
@@ -146,14 +140,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     }
   }
 
-  dynamic auto_scaler_profile {
-    for_each = var.auto_scaler_profile != null ? var.auto_scaler_profile : {}
-      content {
+  auto_scaler_profile {
     balance_similar_node_groups                   = var.auto_scaler_profile.balance_similar_node_groups
-    daemonset_eviction_for_empty_nodes_enabled    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes_enabled
-    daemonset_eviction_for_occupied_nodes_enabled = var.auto_scaler_profile.daemonset_eviction_for_occupied_nodes_enabled
+    #daemonset_eviction_for_empty_nodes_enabled    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes_enabled
+    #daemonset_eviction_for_occupied_nodes_enabled = var.auto_scaler_profile.daemonset_eviction_for_occupied_nodes_enabled
     expander                                      = var.auto_scaler_profile.expander
-    ignore_daemonsets_utilization_enabled         = var.auto_scaler_profile.ignore_daemonsets_utilization_enabled
+    #ignore_daemonsets_utilization_enabled         = var.auto_scaler_profile.ignore_daemonsets_utilization_enabled
     max_graceful_termination_sec                  = var.auto_scaler_profile.max_graceful_termination_sec
     max_node_provisioning_time                    = var.auto_scaler_profile.max_node_provisioning_time
     max_unready_nodes                             = var.auto_scaler_profile.max_unready_nodes
@@ -169,7 +161,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     empty_bulk_delete_max                         = var.auto_scaler_profile.empty_bulk_delete_max
     skip_nodes_with_local_storage                 = var.auto_scaler_profile.skip_nodes_with_local_storage
     skip_nodes_with_system_pods                   = var.auto_scaler_profile.skip_nodes_with_system_pods
-    }
+    
   }
 
   azure_active_directory_role_based_access_control {
@@ -309,7 +301,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     ip_versions         = var.network_profile.ip_versions
     load_balancer_sku   = var.network_profile.load_balancer_sku
     load_balancer_profile {
-      backend_pool_type           = var.network_profile.load_balancer_profile.backend_pool_type
+      #backend_pool_type           = var.network_profile.load_balancer_profile.backend_pool_type
       idle_timeout_in_minutes     = var.network_profile.load_balancer_profile.idle_timeout_in_minutes
       managed_outbound_ip_count   = var.network_profile.load_balancer_profile.managed_outbound_ip_count
       managed_outbound_ipv6_count = var.network_profile.load_balancer_profile.managed_outbound_ipv6_count
@@ -343,8 +335,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   workload_autoscaler_profile {
-    keda_enabled                    = bool
-    vertical_pod_autoscaler_enabled = bool
+    keda_enabled                    = var.workload_autoscaler_profile.keda_enabled
+    vertical_pod_autoscaler_enabled = var.workload_autoscaler_profile.vertical_pod_autoscaler_enabled
   }
 
   service_principal {

@@ -54,7 +54,7 @@ module "azure_kubernetes_cluster" {
   run_command_enabled                 = var.run_command_enabled
   sku_tier                            = var.sku_tier
   support_plan                        = var.support_plan
-  tags                                = locaL.tags
+  tags                                = local.tags
   naming_convention_info              = local.naming_convention_info
 
   default_node_pool = {
