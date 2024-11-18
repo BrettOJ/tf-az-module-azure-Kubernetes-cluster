@@ -601,7 +601,7 @@ variable "auto_scaler_profile_new_pod_scale_up_delay" {
 
 variable "auto_scaler_profile_scale_down_delay_after_add" {
   description = "The scale down delay after add."
-  type        = number
+  type        = string
 }
 
 variable "auto_scaler_profile_scale_down_delay_after_delete" {

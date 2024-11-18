@@ -197,20 +197,10 @@ module "azure_kubernetes_cluster" {
     sgx_quote_helper_enabled = var.confidential_computing_sgx_quote_helper_enabled
   }
 
-
-
-  http_proxy_config = {
-    http_proxy  = var.http_proxy_config_http_proxy
-    https_proxy = var.http_proxy_config_https_proxy
-    no_proxy    = var.http_proxy_config_no_proxy
-  }
-
   identity = {
     type         = var.identity_type
     identity_ids = var.identity_identity_ids
   }
-
-
 
   ingress_application_gateway = {
     gateway_id   = var.ingress_application_gateway_gateway_id
@@ -229,7 +219,6 @@ module "azure_kubernetes_cluster" {
     secret_rotation_interval = var.key_vault_secrets_provider_secret_rotation_interval
   }
 
-
   kubelet_identity = {
     client_id                 = var.kubelet_identity_client_id
     object_id                 = var.kubelet_identity_object_id
@@ -242,8 +231,6 @@ module "azure_kubernetes_cluster" {
       key_data = var.linux_profile_ssh_key_key_data
     }
   }
-
-
 
   maintenance_window = {
     allowed = {

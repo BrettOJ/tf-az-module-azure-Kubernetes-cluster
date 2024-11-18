@@ -359,7 +359,7 @@ variable "maintenance_window" {
   type = object({
     allowed = object({
       day   = string
-      hours = list(number)
+      hours = list(string)
     })
     not_allowed = object({
       end   = string
