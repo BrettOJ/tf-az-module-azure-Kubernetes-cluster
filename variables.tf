@@ -374,7 +374,7 @@ variable "maintenance_window_auto_upgrade" {
   type = object({
     frequency    = string
     interval     = string
-    duration     = string
+    duration     = number
     day_of_week  = string
     day_of_month = number
     week_index   = string
@@ -394,7 +394,7 @@ variable "maintenance_window_node_os" {
   type = object({
     frequency    = string
     interval     = string
-    duration     = string
+    duration     = number
     day_of_week  = string
     day_of_month = number
     week_index   = string

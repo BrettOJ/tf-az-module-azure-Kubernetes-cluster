@@ -192,41 +192,29 @@ resource "azurerm_kubernetes_cluster" "aks" {
     identity_ids = var.identity.identity_ids
   }
 
-  dynamic ingress_application_gateway {
-    for_each = var.ingress_application_gateway != null ? var.ingress_application_gateway : {}
-    content {
+ingress_application_gateway {
       gateway_id   = var.ingress_application_gateway.gateway_id
       gateway_name = var.ingress_application_gateway.gateway_name
       subnet_cidr  = var.ingress_application_gateway.subnet_cidr
       subnet_id    = var.ingress_application_gateway.subnet_id
-    }
   }
 
- dynamic key_management_service {
-    for_each = var.key_management_service != null ? var.key_management_service : {}
-    content {
+key_management_service {
       key_vault_key_id         = var.key_management_service.key_vault_key_id
       key_vault_network_access = var.key_management_service.key_vault_network_access
-    }
   }
 
-  dynamic key_vault_secrets_provider {
-    for_each = var.key_vault_secrets_provider != null ? var.key_vault_secrets_provider : {}
-    content {
+key_vault_secrets_provider {
       secret_rotation_enabled  = var.key_vault_secrets_provider.secret_rotation_enabled
       secret_rotation_interval = var.key_vault_secrets_provider.secret_rotation_interval
     }
-  }
 
-  dynamic kubelet_identity {
-    for_each = var.kubelet_identity != null ? var.kubelet_identity : {}
-    content {
+kubelet_identity {
       client_id                 = var.kubelet_identity.client_id
       object_id                 = var.kubelet_identity.object_id
       user_assigned_identity_id = var.kubelet_identity.user_assigned_identity_id
-    }
   }
-
+  
   linux_profile {
     admin_username = var.linux_profile.admin_username
     ssh_key {

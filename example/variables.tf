@@ -767,7 +767,7 @@ variable "maintenance_window_allowed_day" {
 
 variable "maintenance_window_allowed_hours" {
   description = "The allowed hours."
-  type        = list(string)
+  type        = list(number)
 }
 
 variable "maintenance_window_not_allowed_end" {
@@ -792,7 +792,7 @@ variable "maintenance_window_auto_upgrade_interval" {
 
 variable "maintenance_window_auto_upgrade_duration" {
   description = "The auto upgrade duration."
-  type        = string
+  type        = number
 }
 
 variable "maintenance_window_auto_upgrade_day_of_week" {
@@ -847,7 +847,7 @@ variable "maintenance_window_node_os_interval" {
 
 variable "maintenance_window_node_os_duration" {
   description = "The node OS duration."
-  type        = string
+  type        = number
 }
 
 variable "maintenance_window_node_os_day_of_week" {
