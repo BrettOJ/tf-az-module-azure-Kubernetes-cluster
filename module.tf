@@ -127,25 +127,27 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   dynamic "aci_connector_linux" {
-    for_each = var.aci_connector_linux != null ? var.aci_connector_linux : {}
+    for_each = var.aci_connector_linux == null ? [] : [var.aci_connector_linux]
     content {
       subnet_name = var.aci_connector_linux.subnet_name
     }
   }
 
   dynamic "api_server_access_profile" {
-    for_each = var.api_server_access_profile != null ? var.api_server_access_profile : {}
+    for_each = var.api_server_access_profile == null ? [] : [var.api_server_access_profile]
     content {
       authorized_ip_ranges = var.api_server_access_profile.authorized_ip_ranges
     }
   }
 
-  auto_scaler_profile {
+  dynamic auto_scaler_profile {
+    for_each = var.auto_scaler_profile == null ? [] : [var.auto_scaler_profile]
+    content {
     balance_similar_node_groups                   = var.auto_scaler_profile.balance_similar_node_groups
-    #daemonset_eviction_for_empty_nodes_enabled    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes_enabled
-    #daemonset_eviction_for_occupied_nodes_enabled = var.auto_scaler_profile.daemonset_eviction_for_occupied_nodes_enabled
+    daemonset_eviction_for_empty_nodes_enabled    = var.auto_scaler_profile.daemonset_eviction_for_empty_nodes_enabled
+    daemonset_eviction_for_occupied_nodes_enabled = var.auto_scaler_profile.daemonset_eviction_for_occupied_nodes_enabled
     expander                                      = var.auto_scaler_profile.expander
-    #ignore_daemonsets_utilization_enabled         = var.auto_scaler_profile.ignore_daemonsets_utilization_enabled
+    ignore_daemonsets_utilization_enabled         = var.auto_scaler_profile.ignore_daemonsets_utilization_enabled
     max_graceful_termination_sec                  = var.auto_scaler_profile.max_graceful_termination_sec
     max_node_provisioning_time                    = var.auto_scaler_profile.max_node_provisioning_time
     max_unready_nodes                             = var.auto_scaler_profile.max_unready_nodes
@@ -161,7 +163,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     empty_bulk_delete_max                         = var.auto_scaler_profile.empty_bulk_delete_max
     skip_nodes_with_local_storage                 = var.auto_scaler_profile.skip_nodes_with_local_storage
     skip_nodes_with_system_pods                   = var.auto_scaler_profile.skip_nodes_with_system_pods
-    
+    }
   }
 
   azure_active_directory_role_based_access_control {
@@ -172,14 +174,14 @@ resource "azurerm_kubernetes_cluster" "aks" {
   
 
   dynamic confidential_computing {
-    for_each = var.confidential_computing != null ? var.confidential_computing : {}
+    for_each = var.confidential_computing == null ? [] : [var.confidential_computing]
       content {
         sgx_quote_helper_enabled = var.confidential_computing.sgx_quote_helper_enabled      
       }
   }
 
   dynamic http_proxy_config {
-    for_each = var.http_proxy_config != null ? var.http_proxy_config : {}
+    for_each = var.http_proxy_config == null ? [] : [var.http_proxy_config]
     content {
       http_proxy  = var.http_proxy_config.http_proxy
       https_proxy = var.http_proxy_config.https_proxy
@@ -187,18 +189,22 @@ resource "azurerm_kubernetes_cluster" "aks" {
     }
   }
 
-   identity {
+  dynamic  identity {
+    for_each = var.identity == null ? [] : [var.identity]
+    content {
     type         = var.identity.type
     identity_ids = var.identity.identity_ids
+    }
   }
-
-ingress_application_gateway {
+dynamic ingress_application_gateway {
+    for_each = var.ingress_application_gateway == null ? [] : [var.ingress_application_gateway]
+    content {
       gateway_id   = var.ingress_application_gateway.gateway_id
       gateway_name = var.ingress_application_gateway.gateway_name
       subnet_cidr  = var.ingress_application_gateway.subnet_cidr
       subnet_id    = var.ingress_application_gateway.subnet_id
   }
-
+}
 key_management_service {
       key_vault_key_id         = var.key_management_service.key_vault_key_id
       key_vault_network_access = var.key_management_service.key_vault_network_access
@@ -209,12 +215,15 @@ key_vault_secrets_provider {
       secret_rotation_interval = var.key_vault_secrets_provider.secret_rotation_interval
     }
 
-kubelet_identity {
+dynamic kubelet_identity {
+    for_each = var.kubelet_identity == null ? [] : [var.kubelet_identity]
+    content {
       client_id                 = var.kubelet_identity.client_id
       object_id                 = var.kubelet_identity.object_id
       user_assigned_identity_id = var.kubelet_identity.user_assigned_identity_id
   }
-  
+}
+
   linux_profile {
     admin_username = var.linux_profile.admin_username
     ssh_key {
@@ -274,7 +283,9 @@ kubelet_identity {
     labels_allowed      = var.monitor_metrics.labels_allowed
   }
 
-  network_profile {
+  dynamic network_profile {
+    for_each = var.network_profile == null ? [] : [var.network_profile]
+    content {
     network_plugin      = var.network_profile.network_plugin
     network_mode        = var.network_profile.network_mode
     network_policy      = var.network_profile.network_policy
@@ -288,72 +299,94 @@ kubelet_identity {
     service_cidrs       = var.network_profile.service_cidrs
     ip_versions         = var.network_profile.ip_versions
     load_balancer_sku   = var.network_profile.load_balancer_sku
-    load_balancer_profile {
-      #backend_pool_type           = var.network_profile.load_balancer_profile.backend_pool_type
+    dynamic load_balancer_profile {
+      for_each = var.network_profile.load_balancer_profile == null ? [] : [var.network_profile.load_balancer_profile]
+      content {
+      backend_pool_type           = var.network_profile.load_balancer_profile.backend_pool_type
       idle_timeout_in_minutes     = var.network_profile.load_balancer_profile.idle_timeout_in_minutes
       managed_outbound_ip_count   = var.network_profile.load_balancer_profile.managed_outbound_ip_count
       managed_outbound_ipv6_count = var.network_profile.load_balancer_profile.managed_outbound_ipv6_count
       outbound_ip_address_ids     = var.network_profile.load_balancer_profile.outbound_ip_address_ids
       outbound_ip_prefix_ids      = var.network_profile.load_balancer_profile.outbound_ip_prefix_ids
       outbound_ports_allocated    = var.network_profile.load_balancer_profile.outbound_ports_allocated
+      }
     }
-    nat_gateway_profile {
+    dynamic nat_gateway_profile {
+      for_each = var.network_profile.nat_gateway_profile == null ? [] : [var.network_profile.nat_gateway_profile]
+      content {
       idle_timeout_in_minutes   = var.network_profile.nat_gateway_profile.idle_timeout_in_minutes
       managed_outbound_ip_count = var.network_profile.nat_gateway_profile.managed_outbound_ip_count
+      }
+      }
     }
   }
-
   oms_agent {
     log_analytics_workspace_id      = var.oms_agent.log_analytics_workspace_id
     msi_auth_for_monitoring_enabled = var.oms_agent.msi_auth_for_monitoring_enabled
   }
 
-  service_mesh_profile {
+  dynamic service_mesh_profile {
+    for_each = var.service_mesh_profile == null ? [] : [var.service_mesh_profile]
+    content {
     mode                             = var.service_mesh_profile.mode
     revisions                        = var.service_mesh_profile.revisions
     internal_ingress_gateway_enabled = var.service_mesh_profile.internal_ingress_gateway_enabled
     external_ingress_gateway_enabled = var.service_mesh_profile.external_ingress_gateway_enabled
-    certificate_authority {
+    dynamic certificate_authority {
+      for_each = var.service_mesh_profile.certificate_authority == null ? [] : [var.service_mesh_profile.certificate_authority]
+      content {
       key_vault_id           = var.service_mesh_profile.certificate_authority.key_vault_id
       root_cert_object_name  = var.service_mesh_profile.certificate_authority.root_cert_object_name
       cert_chain_object_name = var.service_mesh_profile.certificate_authority.cert_chain_object_name
       cert_object_name       = var.service_mesh_profile.certificate_authority.cert_object_name
       key_object_name        = var.service_mesh_profile.certificate_authority.key_object_name
     }
+   }
   }
-
+}
   workload_autoscaler_profile {
     keda_enabled                    = var.workload_autoscaler_profile.keda_enabled
     vertical_pod_autoscaler_enabled = var.workload_autoscaler_profile.vertical_pod_autoscaler_enabled
   }
 
-  service_principal {
-    client_id     = var.service_principal.client_id
-    client_secret = var.service_principal.client_secret
+  dynamic service_principal {
+    for_each = var.service_principal == null ? [] : [var.service_principal]
+    content {
+      client_id     = var.service_principal.client_id
+      client_secret = var.service_principal.client_secret
+    }
   }
 
-  storage_profile {
-    blob_driver_enabled         = var.storage_profile.blob_driver_enabled
-    disk_driver_enabled         = var.storage_profile.disk_driver_enabled
-    file_driver_enabled         = var.storage_profile.file_driver_enabled
-    snapshot_controller_enabled = var.storage_profile.snapshot_controller_enabled
+ dynamic storage_profile {
+    for_each = var.storage_profile == null ? [] : [var.storage_profile]
+    content {
+      blob_driver_enabled         = var.storage_profile.blob_driver_enabled
+      disk_driver_enabled         = var.storage_profile.disk_driver_enabled
+      file_driver_enabled         = var.storage_profile.file_driver_enabled
+      snapshot_controller_enabled = var.storage_profile.snapshot_controller_enabled
+    }
   }
 
-  web_app_routing {
+ dynamic web_app_routing {
+    for_each = var.web_app_routing == null ? [] : [var.web_app_routing]
+    content {
     dns_zone_ids = var.web_app_routing.dns_zone_ids
   }
-
-windows_profile {
-    admin_username = var.windows_profile.admin_username
-    admin_password = var.windows_profile.admin_password
-    license        = var.windows_profile.license
-    gmsa {
-      dns_server  = var.windows_profile.gmsa.dns_server
-      root_domain = var.windows_profile.gmsa.root_domain
+ }
+dynamic windows_profile {
+    for_each = var.windows_profile == null ? [] : [var.windows_profile]
+    content {
+      admin_username = var.windows_profile.admin_username
+      admin_password = var.windows_profile.admin_password
+      license        = var.windows_profile.license
+      dynamic gmsa {
+        for_each = var.windows_profile.gmsa != null ? [] : [var.windows_profile.gmsa]
+        content {
+        dns_server  = var.windows_profile.gmsa.dns_server
+        root_domain = var.windows_profile.gmsa.root_domain
+      }
     }
   }
 }
 
-
-
-
+}

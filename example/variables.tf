@@ -755,11 +755,6 @@ variable "linux_profile_admin_username" {
   type        = string
 }
 
-variable "linux_profile_ssh_key_key_data" {
-  description = "The key data."
-  type        = string
-}
-
 variable "maintenance_window_allowed_day" {
   description = "The allowed day."
   type        = string
@@ -890,10 +885,7 @@ variable "maintenance_window_node_os_not_allowed_start" {
   type        = string
 }
 
-variable "microsoft_defender_log_analytics_workspace_id" {
-  description = "The ID of the Workspace."
-  type        = string
-}
+
 
 variable "monitor_metrics_annotations_allowed" {
   description = "Should annotations be allowed?"
@@ -1013,11 +1005,6 @@ variable "network_profile_nat_gateway_profile_idle_timeout_in_minutes" {
 variable "network_profile_nat_gateway_profile_managed_outbound_ip_count" {
   description = "The managed outbound IP count."
   type        = number
-}
-
-variable "oms_agent_log_analytics_workspace_id" {
-  description = "The ID of the Workspace."
-  type        = string
 }
 
 variable "oms_agent_msi_auth_for_monitoring_enabled" {
@@ -1140,4 +1127,136 @@ variable "windows_profile_gmsa_dns_server" {
 variable "windows_profile_gmsa_root_domain" {
   description = "The GMSA Root Domain."
   type        = string
+}
+
+
+# LAW Variables
+
+variable "allow_resource_only_permissions" {
+  type        = bool
+  description = "(optional) describe your variable"
+}
+
+variable "local_authentication_disabled" {
+  type        = bool
+  description = "(optional) describe your variable"
+}
+
+variable "sku" {
+  type        = string
+  description = "(optional) describe your variable"
+}
+
+variable "retention_in_days" {
+  type        = number
+  description = "(optional) describe your variable"
+}
+
+variable "daily_quota_gb" {
+  type        = number
+  description = "(optional) describe your variable"
+}
+
+variable "cmk_for_query_forced" {
+  type        = bool
+  description = "(optional) describe your variable"
+}
+
+variable "internet_ingestion_enabled" {
+  type        = bool
+  description = "(optional) describe your variable"
+}
+
+variable "internet_query_enabled" {
+  type        = bool
+  description = "(optional) describe your variable"
+}
+
+variable "reservation_capacity_in_gb_per_day" {
+  type        = number
+  description = "(optional) describe your variable"
+}
+
+variable "data_collection_rule_id" {
+  type        = string
+  description = "(optional) describe your variable"
+}
+
+variable "immediate_data_purge_on_30_days_enabled" {
+  type        = bool
+  description = "(optional) describe your variable"
+}
+
+variable "key_type" {
+  description = "Specifies the Key Type to use for this Key Vault Key. Possible values are EC (Elliptic Curve), EC-HSM, RSA and RSA-HSM."
+  type = string
+}
+
+variable "key_size" {
+  description = "Specifies the Size of the RSA key to create in bytes. For example, 1024 or 2048. Note: This field is required if key_type is RSA or RSA-HSM."
+  type = number
+    default = 2048
+}
+
+variable "curve" {
+  description = "Specifies the curve to use when creating an EC key. Possible values are P-256, P-256K, P-384, and P-521. This field will be required in a future release if key_type is EC or EC-HSM. The API will default to P-256 if nothing is specified."
+  type = string
+}
+
+variable "key_opts" {
+  description = "A list of JSON web key operations. Possible values include: decrypt, encrypt, sign, unwrapKey, verify and wrapKey. Please note these values are case sensitive."
+  type = list(string)
+}
+
+variable "not_before_date" {
+  description = "Key not usable before the provided UTC datetime (Y-m-d'T'H:M:S'Z')."
+  type = string
+}
+
+variable "expiration_date" {
+  description = "Expiration UTC datetime (Y-m-d'T'H:M:S'Z')."
+  type = string
+}
+
+variable "rotation_policy_automatic_time_before_expiry" {
+    description = "Specifies the time before the key expires when the key should be automatically rotated."
+    type = string
+}
+
+variable "rotation_policy_automatic_time_after_creation" {
+    description = "Specifies the time after which the key should be automatically rotated."
+    type = string
+  
+}
+
+variable "rotation_policy_expire_after" {
+    description = "Specifies the time after which the key should expire."
+    type = string
+}
+
+variable "rotation_policy_notify_before_expiry" {
+    description = "Specifies the time before the key expires when the key should be rotated."
+    type = string
+}
+
+# key vault access policy variables
+variable "certificate_permissions" {
+  description = "List of certificate permissions, must be one or more from the following: Backup, Create, Delete, DeleteIssuers, Get, GetIssuers, Import, List, ListIssuers, ManageContacts, ManageIssuers, Purge, Recover, Restore, SetIssuers and Update."
+  type = list(string)
+}
+
+variable "key_permissions" {
+  description = "List of key permissions, must be one or more from the following: Backup, Create, Decrypt, Delete, Encrypt, Get, Import, List, Purge, Recover, Restore, Sign, UnwrapKey, Update, Verify, WrapKey, Release, Rotate, GetRotationPolicy and SetRotationPolicy."
+  type = list(string)
+}
+
+
+variable "secret_permissions" {
+  description = "List of secret permissions, must be one or more from the following: Backup, Delete, Get, List, Purge, Recover, Restore and Set."
+  type = list(string)
+}
+
+variable "storage_permissions" {
+  description = "List of storage permissions, must be one or more from the following: Backup, Delete, DeleteSAS, Get, GetSAS, List, ListSAS, Purge, Recover, RegenerateKey, Restore, Set, SetSAS and Update."
+  type = list(string)
 }

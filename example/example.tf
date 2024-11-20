@@ -4,7 +4,7 @@ locals {
     env  = "env"
     site = "zn"
     app  = "www"
-    name = "001"
+    name = "003"
   }
   tags = {
     environment = "prd"
@@ -12,6 +12,12 @@ locals {
 }
 
 data "azurerm_client_config" "current" {}
+
+resource "tls_private_key" "ssh_key" {
+    algorithm = "RSA"
+    rsa_bits = 4096
+}
+
 
 module "resource_groups" {
   source = "git::https://github.com/BrettOJ/tf-az-module-resource-group?ref=main"
@@ -25,11 +31,101 @@ module "resource_groups" {
   }
 }
 
+module "azurerm_user_assigned_identity" {
+  source                 = "git::https://github.com/BrettOJ/tf-az-module-auth-user-msi?ref=main"
+  resource_group_name    = module.resource_groups.rg_output[1].name
+  location               = var.location
+  naming_convention_info = local.naming_convention_info
+  tags                   = local.tags
+}
+
+module "azurerm_key_vault" {
+  source = "git::https://github.com/BrettOJ/tf-az-module-azure-key-vault?ref=main"
+  resource_group_name = module.resource_groups.rg_output[1].name
+  location            = var.location
+  sku_name            = "standard"
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  enabled_for_deployment          = true
+  enabled_for_disk_encryption     = true
+  enabled_for_template_deployment = true
+  enable_rbac_authorization       = true
+  network_acls = {
+      bypass                     = "AzureServices"
+      default_action             = "Allow"
+      ip_rules                   = null
+      virtual_network_subnet_ids = null
+  }
+  purge_protection_enabled        = true
+  public_network_access_enabled   = true
+  soft_delete_retention_days      = 7
+  tags                   = local.tags
+  naming_convention_info = local.naming_convention_info
+}
+
+module "azure_key_vault_access_policy_boj" {
+    source = "git::https://github.com/BrettOJ/tf-az-module-azure-key-vault-access-policy?ref=main"
+    key_vault_id = module.azurerm_key_vault.key_vault_id
+    tenant_id    = data.azurerm_client_config.current.tenant_id
+    object_id    = data.azurerm_client_config.current.object_id
+    application_id = null
+    
+    certificate_permissions = var.certificate_permissions
+    key_permissions         = var.key_permissions
+    secret_permissions      = var.secret_permissions
+    storage_permissions     = var.storage_permissions
+}
+
+module "azurerm_key_vault_key" { 
+  source = "git::https://github.com/BrettOJ/tf-az-module-key-vault-key?ref=main"
+  key_vault_id = module.azurerm_key_vault.key_vault_id
+  key_type     = var.key_type
+  key_size     = var.key_size
+  curve = var.curve
+  key_opts = var.key_opts
+  not_before_date = var.not_before_date
+  expiration_date = var.expiration_date
+  tags = local.tags
+  naming_convention_info = local.naming_convention_info
+
+  rotation_policy = {
+    automatic = {
+      time_before_expiry = var.rotation_policy_automatic_time_before_expiry
+      time_after_creation = var.rotation_policy_automatic_time_after_creation
+    }
+    expire_after         = var.rotation_policy_expire_after
+    notify_before_expiry = var.rotation_policy_notify_before_expiry
+  }
+}
+
+module "azurerm_log_analytics_workspace" {
+  source                                  = "git::https://github.com/BrettOJ/tf-az-module-azure-log-analytics-workspace?ref=main"
+  location                                = var.location
+  resource_group_name                     = module.resource_groups.rg_output[1].name
+  allow_resource_only_permissions         = var.allow_resource_only_permissions
+  local_authentication_disabled           = var.local_authentication_disabled
+  sku                                     = var.sku
+  retention_in_days                       = var.retention_in_days
+  daily_quota_gb                          = var.daily_quota_gb
+  cmk_for_query_forced                    = var.cmk_for_query_forced
+  internet_ingestion_enabled              = var.internet_ingestion_enabled
+  internet_query_enabled                  = var.internet_query_enabled
+  reservation_capacity_in_gb_per_day      = var.reservation_capacity_in_gb_per_day
+  data_collection_rule_id                 = var.data_collection_rule_id
+  immediate_data_purge_on_30_days_enabled = var.immediate_data_purge_on_30_days_enabled
+  tags                                    = local.tags
+  naming_convention_info                  = local.naming_convention_info
+
+  identity = {
+    type         = "SystemAssigned"
+    identity_ids = null
+  }
+}
+
 
 module "azure_kubernetes_cluster" {
   source                              = "../"
   location                            = var.location
-  resource_group_name                 = var.resource_group_name
+  resource_group_name                 = module.resource_groups.rg_output[1].name
   dns_prefix                          = var.dns_prefix
   dns_prefix_private_cluster          = var.dns_prefix_private_cluster
   automatic_upgrade_channel           = var.automatic_upgrade_channel
@@ -199,18 +295,10 @@ module "azure_kubernetes_cluster" {
 
   identity = {
     type         = var.identity_type
-    identity_ids = var.identity_identity_ids
+    identity_ids = [module.azurerm_user_assigned_identity.msi_output.id]
   }
-
-  ingress_application_gateway = {
-    gateway_id   = var.ingress_application_gateway_gateway_id
-    gateway_name = var.ingress_application_gateway_gateway_name
-    subnet_cidr  = var.ingress_application_gateway_subnet_cidr
-    subnet_id    = var.ingress_application_gateway_subnet_id
-  }
-
   key_management_service = {
-    key_vault_key_id         = var.key_management_service_key_vault_key_id
+    key_vault_key_id         = module.azurerm_key_vault_key.akv_key_output.id
     key_vault_network_access = var.key_management_service_key_vault_network_access
   }
 
@@ -219,16 +307,17 @@ module "azure_kubernetes_cluster" {
     secret_rotation_interval = var.key_vault_secrets_provider_secret_rotation_interval
   }
 
+/*
   kubelet_identity = {
-    client_id                 = var.kubelet_identity_client_id
-    object_id                 = var.kubelet_identity_object_id
-    user_assigned_identity_id = var.kubelet_identity_user_assigned_identity_id
-  }
+    client_id                 = module.azurerm_user_assigned_identity.msi_output.client_id
+    object_id                 = null
+    user_assigned_identity_id = module.azurerm_user_assigned_identity.msi_output.id
+  }*/
 
   linux_profile = {
     admin_username = var.linux_profile_admin_username
     ssh_key = {
-      key_data = var.linux_profile_ssh_key_key_data
+      key_data = tls_private_key.ssh_key.public_key_openssh
     }
   }
 
@@ -276,7 +365,7 @@ module "azure_kubernetes_cluster" {
   }
 
   microsoft_defender = {
-    log_analytics_workspace_id = var.microsoft_defender_log_analytics_workspace_id
+    log_analytics_workspace_id = module.azurerm_log_analytics_workspace.law_output.id
   }
 
   monitor_metrics = {
@@ -298,38 +387,13 @@ module "azure_kubernetes_cluster" {
     service_cidrs       = var.network_profile_service_cidrs
     ip_versions         = var.network_profile_ip_versions
     load_balancer_sku   = var.network_profile_load_balancer_sku
-    load_balancer_profile = {
-      backend_pool_type           = var.network_profile_load_balancer_profile_backend_pool_type
-      idle_timeout_in_minutes     = var.network_profile_load_balancer_profile_idle_timeout_in_minutes
-      managed_outbound_ip_count   = var.network_profile_load_balancer_profile_managed_outbound_ip_count
-      managed_outbound_ipv6_count = var.network_profile_load_balancer_profile_managed_outbound_ipv6_count
-      outbound_ip_address_ids     = var.network_profile_load_balancer_profile_outbound_ip_address_ids
-      outbound_ip_prefix_ids      = var.network_profile_load_balancer_profile_outbound_ip_prefix_ids
-      outbound_ports_allocated    = var.network_profile_load_balancer_profile_outbound_ports_allocated
-    }
-    nat_gateway_profile = {
-      idle_timeout_in_minutes   = var.network_profile_nat_gateway_profile_idle_timeout_in_minutes
-      managed_outbound_ip_count = var.network_profile_nat_gateway_profile_managed_outbound_ip_count
-    }
+    load_balancer_profile = null
+    nat_gateway_profile = null
   }
 
   oms_agent = {
-    log_analytics_workspace_id      = var.oms_agent_log_analytics_workspace_id
+    log_analytics_workspace_id      = module.azurerm_log_analytics_workspace.law_output.id
     msi_auth_for_monitoring_enabled = var.oms_agent_msi_auth_for_monitoring_enabled
-  }
-
-  service_mesh_profile = {
-    mode                             = var.service_mesh_profile_mode
-    revisions                        = var.service_mesh_profile_revisions
-    internal_ingress_gateway_enabled = var.service_mesh_profile_internal_ingress_gateway_enabled
-    external_ingress_gateway_enabled = var.service_mesh_profile_external_ingress_gateway_enabled
-    certificate_authority = {
-      key_vault_id           = var.service_mesh_profile_certificate_authority_key_vault_id
-      root_cert_object_name  = var.service_mesh_profile_certificate_authority_root_cert_object_name
-      cert_chain_object_name = var.service_mesh_profile_certificate_authority_cert_chain_object_name
-      cert_object_name       = var.service_mesh_profile_certificate_authority_cert_object_name
-      key_object_name        = var.service_mesh_profile_certificate_authority_key_object_name
-    }
   }
 
   workload_autoscaler_profile = {
@@ -337,10 +401,6 @@ module "azure_kubernetes_cluster" {
     vertical_pod_autoscaler_enabled = var.workload_autoscaler_profile_vertical_pod_autoscaler_enabled
   }
 
-  service_principal = {
-    client_id     = var.service_principal_client_id
-    client_secret = var.service_principal_client_secret
-  }
 
   storage_profile = {
     blob_driver_enabled         = var.storage_profile_blob_driver_enabled
@@ -348,11 +408,6 @@ module "azure_kubernetes_cluster" {
     file_driver_enabled         = var.storage_profile_file_driver_enabled
     snapshot_controller_enabled = var.storage_profile_snapshot_controller_enabled
   }
-
-  web_app_routing = {
-    dns_zone_ids = var.web_app_routing_dns_zone_ids
-  }
-
 
   windows_profile = {
     admin_username = var.windows_profile_admin_username
@@ -363,6 +418,9 @@ module "azure_kubernetes_cluster" {
       root_domain = var.windows_profile_gmsa_root_domain
     }
   }
+
+depends_on = [ module.azure_role_assignment ]
+
 }
 
 
